@@ -1,2 +1,9 @@
-.git
-.venv
+.venv/
+__pycache__/
+database/*.duckdb
+logs/*.log
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+exports/powerbi/*
+!exports/powerbi/.gitkeep
