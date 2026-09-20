@@ -1,0 +1,27 @@
+# Each pipeline describes one source-to-mart flow. Set enabled to false to skip it.
+pipelines:
+  sales:
+    # This example is ready for configuration but disabled until sales model exist.
+    enabled: false
+    source_folder: source/sales
+    source_patter: "*.xlsx"
+    bronze_table: bronze.sales
+    dbt_selector: tag:sales
+    mart_tables:
+      - mart.sales
+
+  erp:
+    enabled: true
+    append: true
+    # Source files are discovered relative to the repository unit
+    source_folder: source/erp
+    source_pattern: "*.csv"
+    bronze_table: bronze.erp
+    # excel:
+    # sheet_name: "ERP_RAW"
+    # header: 0
+    required_columns:
+    # The selector chooses the dbt models
+    dbt_selector: tag:erp
+    mart_tables:
+      - mart.erp
