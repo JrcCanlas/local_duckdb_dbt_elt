@@ -13,3 +13,29 @@ and Power BI-friendly exports. The enabled ERP and workflow pipelines provide cu
 ## Synthetic data source generated from this project:
 
 - [CSV/Excel ERP/Workflow Invoice Generator](https://github.com/JrcCanlas/raw-csv_excel-invoice-generator)
+
+## Highlevel Architecture
+
+../images/Local-First Data Architecture.jpg
+
+## Project flow
+
+CSV/Excel Source Files
+|  
+v
+Python ETL Orchestrator
+|
+v
+DuckDB Bronze Layer
+|
+v
+dbt Silver Transformation Layer
+|
+v
+dbt Mart Layer
+|
+v
+Parquet/CSV Exports
+|
+v
+Power BI
