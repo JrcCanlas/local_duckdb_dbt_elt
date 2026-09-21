@@ -141,3 +141,16 @@ def append_bronze(con, table, df, path, run_id):
     )
     con.unregister("incoming")
     return len(data)
+
+
+def clear_bronze(con, table):
+    """Remove all existing rows from a Bronze table when replacing a load."""
+    if not SAFE_TABLE.fullmatch(table):
+        raise ValueError(f"Unsafe table: {table}")
+    schema, name = table.split(".")
+    exists = con.execute(
+        "SELECT count(*) FROM information_schema.tables WHERE table_schema=? AND table_name=?",
+        [schema, name],
+    ).fetchone()[0]
+    if exists:
+        con.execute(f"DELETE FROM {table}")
