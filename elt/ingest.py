@@ -52,3 +52,14 @@ def validate_required_columns(df, required_columns, path):
         raise ValueError(
             f"Missing required column(s) in {path.name}: {', '.join(missing)}"
         )
+
+
+def loaded(con, pipeline, path, digest):
+    """Check metadata to see whether this exact file version loaded successfully."""
+    return (
+        con.execute(
+            "SELECT count(*) FROM metadata.file_history WHERE pipeline_name=? AND source_file? AND file_hash=? AND status='SUCCESS",
+            [pipeline, str(path.resolve()), digest],
+        ).fetchone()[0]
+        > 0
+    )
