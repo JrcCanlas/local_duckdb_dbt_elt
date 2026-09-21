@@ -40,3 +40,15 @@ def convert_excel_to_parquet(path, output_path, excel_config=None, data=None):
     data.to_parquet(temporary_path, index=False)
     temporary_path.replace(output_path)
     return output_path
+
+
+def validate_required_columns(df, required_columns, path):
+    """Raise an error when a source file is missing configured columns."""
+    required = set(required_columns or [])
+    actual = {str(column).strip() for column in df.columns}
+    missing = sorted(required - actual)
+
+    if missing:
+        raise ValueError(
+            f"Missing required column(s) in {path.name}: {', '.join(missing)}"
+        )
