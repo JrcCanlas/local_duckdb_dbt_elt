@@ -118,3 +118,26 @@ def append_source_file(con, table, path, run_id, source_path=None):
         [source_file, loaded_at, run_id, str(path)],
     )
     return row_count
+
+
+def append_bronze(con, table, df, path, run_id):
+    """Append source rows to Bronze, adding lineage columns for traceability."""
+    if not SAFE_TABLE.fullmatch(table):
+        raise ValueError(f"Unsafe table: {table}")
+    data = df.copy()
+    data["_source_file"] = str(path.resolve())
+    data["_loaded_at"] = datetime.now()
+    data["_run_id"] = run_id
+    con.register("incoming", data)
+    schema, name = table.split(".")
+    exists = con.execute(
+        "SELECT count(*) FROM information_schema.tables WHERE table_schema=? AND table_name=?",
+        [schema, name],
+    ).fetchone()[0]
+    con.execute(
+        f"INSERT INTO {table} BY NAME SELECT * FROM incoming"
+        if exists
+        else f"CREATE TABLE {table} AS SELECT * FROM incoming"
+    )
+    con.unregister("incoming")
+    return len(data)
