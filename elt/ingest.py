@@ -30,3 +30,13 @@ def read_file(path: Path, excel_config=None):
             engine="openpyxl",
         ).fillna("")
     raise ValueError(f"Unsupported file: {path}")
+
+
+def convert_excel_to_parquet(path, output_path, excel_config=None, data=None):
+    """Convert an Excel worksheet to Parquet using an atomic replacement."""
+    data = data if data is not None else read_file(path, excel_config)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = output_path.with_suffix(output_path.suffix + "*.tmp")
+    data.to_parquet(temporary_path, index=False)
+    temporary_path.replace(output_path)
+    return output_path
