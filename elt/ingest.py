@@ -63,3 +63,22 @@ def loaded(con, pipeline, path, digest):
         ).fetchone()[0]
         > 0
     )
+
+
+def metadata_unchanged(con, pipeline, path):
+    """Return whether a successful load has the same size and modified time."""
+    stat = path.stat()
+    return (
+        con.execute(
+            "SELECT count(*) FROM metadata.file_history "
+            "WHERE pipeline_name=? AND source_file=? AND file_size_bytes=? "
+            "AND file_modified_at=? AND status='SUCCESS'",
+            [
+                pipeline,
+                str(path.resolve()),
+                stat.st_size,
+                datetime.fromtimestamp(stat.st_mtime),
+            ],
+        ).fetchone()[0]
+        > 0
+    )
