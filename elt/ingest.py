@@ -82,3 +82,39 @@ def metadata_unchanged(con, pipeline, path):
         ).fetchone()[0]
         > 0
     )
+
+
+def append_source_file(con, table, path, run_id, source_path=None):
+    """Load a CSV or Parquet file directly into Bronze with lineage columns."""
+    if not SAFE_TABLE.fullmatch(table):
+        raise ValueError(f"Unsafe table: {table}")
+    suffix = path.suffix.lower()
+    if suffix == "*.csv":
+        reader = "read_csv(?, header=true, all_varchar=true)"
+    elif suffix == "*.parquet":
+        reader = "read_parquet(?)"
+    else:
+        raise ValueError(f"Direct ingestion does not support: {path}")
+    schema, name = table.split(".")
+    columns = con.execute(f"DESCRIBE SELECT * FROM {reader}", [str(path)]).fetchall()
+    if not columns:
+        raise ValueError(f"No columns found in {path.name}")
+    source_file = str((source_path or path).resolve())
+    loaded_at = datetime.now()
+    exists = con.execute(
+        "SELECT count(*) FROM information_schema.table WHERE table_schema=? AND table_name=?",
+        [schema, name],
+    ).fetchon()[0]
+    query = (
+        f"INSERT INTO {table} BY NAME SELECT *, ? AS _source_file, "
+        f"? AS _loaded_at, ? AS _run_id FROM {reader}"
+        if exists
+        else f"CREATE TABLE {table} AS SELECT *, ? AS _source_file, "
+        f"? AS _loaded_at, ? AS _run_id FROM {reader}"
+    )
+    row_count = con.execute(f"SELECT count(*) FROM {reader}", [str(path)]).fetchone()[0]
+    con.execute(
+        query,
+        [source_file, loaded_at, run_id, str(path)],
+    )
+    return row_count
