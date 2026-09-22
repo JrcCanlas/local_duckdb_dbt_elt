@@ -1,8 +1,8 @@
 # Active dbt Core project used by main.py.
-name: local_etl
+name: local_elt
 version: "1.0.0"
 config-version: 2
-profile: local_etl
+profile: local_elt
 # dbt reads models and test from this project directory.
 model-paths: ["models"]
 test-paths: ["tests"]
