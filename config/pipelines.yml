@@ -25,3 +25,29 @@ pipelines:
     dbt_selector: tag:erp
     mart_tables:
       - mart.erp
+
+  workflow:
+    enabled: true
+    append: true
+    # Source files are discovered relative to the repository root.
+    source_folder: source/workflow
+    source_pattern: "*.csv"
+    bronze_table: bronze.workflow
+    required_columns:
+    dbt_selector: +tag:workflow
+    mart_tables:
+      - mart.workflow
+
+  customer:
+    enabled: false
+    append: false
+    # Source files are discovered relative to the repository root.
+    source_folder: source/customer
+    source_pattern: "*.csv"
+    bronze_table: bronze.customer
+    required_columns:
+
+    # The selector chooses the dbt models tagged for this pipeline.
+    dbt_selector: tag:customer
+    mart_tables:
+      - mart.customer
