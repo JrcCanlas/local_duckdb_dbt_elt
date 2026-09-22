@@ -1,0 +1,18 @@
+# Active dbt Core project used by main.py.
+name: local_etl
+version: "1.0.0"
+config-version: 2
+profile: local_etl
+# dbt reads models and test from this project directory.
+model-paths: ["models"]
+test-paths: ["tests"]
+clean-targets: ["target", "dbt-packages"]
+models:
+  local_etl:
+    # Silver cleans Bronze data; Mart contains reporting-ready tables.
+    silver:
+      +schema: silver
+      +materialized: tables
+    mart:
+      +schema: mart
+      +materialized: tables
