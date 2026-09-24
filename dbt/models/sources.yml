@@ -1,0 +1,10 @@
+# Sources are tables created by Python ingestion in DuckDB's bronze schema.
+version: 2
+sources:
+  - name: bronze
+    schema: bronze
+    tables:
+      - name: customer
+      - name: sales
+      - name: erp
+      - name: workflow
