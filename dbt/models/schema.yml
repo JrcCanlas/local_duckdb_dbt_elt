@@ -1,0 +1,13 @@
+# Documentation and data quality tests for the active dbt models.
+version: 2
+models:
+  - name: stg_customer
+    description: Clean customer records from Bronze.
+    columns:
+      - name: customer_id
+        data_tests: [not_null, unique]
+  - name: customer
+    description: Power BI-ready customer mart.
+    columns:
+      - name: customer_id
+        data_tests: [not_null, unique]
