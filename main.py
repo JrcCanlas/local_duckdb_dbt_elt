@@ -1,2 +1,38 @@
+from pathlib import Path
+from datetime import datetime
+import argparse, logging, os, subprocess, sys, time, uuid
+import duckdb
+from elt.config import read_yaml
+from elt.metadata import initialize
+from elt.ingest import (
+    file_hash,
+    read_file,
+    loaded,
+    append_bronze,
+    append_source_file,
+    clear_bronze,
+    metadata_unchanged,
+    convert_excel_to_parquet,
+    validate_required_columns,
+)
+from elt.export import export_tables
+
+ROOT = (
+    Path(sys.executable).resolve().parent
+    if getattr(sys, "frozen", False)
+    else Path(__file__).resolve().parent
+)
+
+
+class ConsoleFormatter(logging.Formatter):
+    """Color error message in a interactive console without coloring files."""
+
+    def format(self, record):
+        message = super().format(record)
+        if record.levelno >= logging.ERROR and sys.stderr.isatty():
+            return f"\033[31m{message}\033[0m"
+        return message
+
+
 if __name__ == "__main__":
     print("Test run")
