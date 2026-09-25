@@ -34,5 +34,12 @@ class ConsoleFormatter(logging.Formatter):
         return message
 
 
+def connect(db_path):
+    """Open DuckDB and make sure the operational metadata tables exists."""
+    con = duckdb.connect(str(db_path))
+    initialize(con)
+    return con
+
+
 if __name__ == "__main__":
     print("Test run")
