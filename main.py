@@ -41,5 +41,13 @@ def connect(db_path):
     return con
 
 
+def audit(con, run, pipeline, stage, status, rows=0, msg=None):
+    """Record the result of one pipeline stage in the audit log."""
+    con.execute(
+        "INSERT INTO metadata.audit_log VALUE (?,?,?,?,current_timestamp,?,?,?)",
+        [str(uuid.uuid4()), run, pipeline, stage, status, rows, msg],
+    )
+
+
 if __name__ == "__main__":
     print("Test run")
