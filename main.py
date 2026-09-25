@@ -57,5 +57,38 @@ def format_runtime(seconds):
     return f"{hours:02d}{minutes:02d}{seconds:02d}"
 
 
+def ensure_runtime_folders(pipes, app):
+    """Create every directory expected by the ETL runtime configuration.
+
+    This establishes the source folders, any staging area required for Excel
+    conversions, the export directory for Power BI artifacts, the database file
+    parent folder, and the application log directory.
+
+    Args:
+        pipes: Mapping of pipeline names to configuration dictionaries from
+            config/pipelines.yml.
+        app: Application configuration dictionary loaded from config/app.yml.
+    """
+    source_folders = {
+        ROOT / cfg["source_folder"]
+        for cfg in pipes.values()
+        if cfg.get("source_folder")
+    }
+    for folder in source_folders:
+        folder.mkdir(parents=True, exist_ok=True)
+        staging_folders = {
+            ROOT / cfg.get("staging_folder", f"staging/{name}")
+            for name, cfg in pipes.items()
+            if cfg.get("source_pattern", "").lower().endswith((".xlsx", ".xlsm"))
+        }
+        for folder in staging_folders:
+            folder.mkdir(parents=True, exist_ok=True)
+    (ROOT / app["exports"].get("folder", "exports/powerbi")).mkdir(
+        parents=True, exist_ok=True
+    )
+    (ROOT / app["database"]).parent.mkdir(parents=True, exist_ok=True)
+    (ROOT / app["logging"]["file"]).parent.mkdir(parents=True, exist_ok=True)
+
+
 if __name__ == "__main__":
     print("Test run")
