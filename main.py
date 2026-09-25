@@ -90,5 +90,65 @@ def ensure_runtime_folders(pipes, app):
     (ROOT / app["logging"]["file"]).parent.mkdir(parents=True, exist_ok=True)
 
 
+def dbt_build(selector, db_path):
+    """Execute the configured dbt build for a pipeline and log its output.
+
+    The project intentionally calls the dbt executable directly instead of using
+    ``python -m dbt`` because the repository contains a local ``dbt`` directory
+    that holds the project itself and would otherwise shadow the package import.
+
+    Args:
+        selector: dbt selector string used with ``--select`` to build the desired
+            models or tags.
+        db_path: Filesystem location of the DuckDB database passed through the
+            ETL_DATABASE_PATH environment variable to the dbt process.
+
+    Raises:
+        RuntimeError: If the dbt command exits with a non-zero status code.
+    """
+    dbt_executable = ROOT / "dbt.exe"
+    if not dbt_executable.exists():
+        dbt_executable = Path(sys.executable).with_name("dbt")
+    cmd = [
+        str(dbt_executable),
+        "build",
+        "--project-dir",
+        str(ROOT / "dbt"),
+        "--profiles-dir",
+        str(ROOT / "dbt"),
+        "--target-path",
+        str(ROOT / "dbt" / "target"),
+        "--select",
+        selector,
+    ]
+    environment = dict(os.environ)
+    environment["ETL_DATABASE_PATH"] = str(db_path)
+    result = subprocess.run(
+        cmd,
+        cwd=ROOT,
+        env=environment,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    dbt_error_started = False
+    for line in result.stdout.splitlines():
+        if "[ERROR]: Encountered an error:" in line:
+            dbt_error_started = True
+        if dbt_error_started:
+            logging.error("[dbt] %s", line)
+        else:
+            logging.info("[dbt] %s", line)
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"dbt build failed with exit code {result.returncode}. "
+            "Review the preceding [dbt] messages for the failing model."
+        )
+
+
 if __name__ == "__main__":
     print("Test run")
