@@ -49,5 +49,13 @@ def audit(con, run, pipeline, stage, status, rows=0, msg=None):
     )
 
 
+def format_runtime(seconds):
+    """Format elapsed seconds as an easy-to-read hours/minutes/seconds value."""
+    total_seconds = max(0, int(seconds))
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{hours:02d}{minutes:02d}{seconds:02d}"
+
+
 if __name__ == "__main__":
     print("Test run")
