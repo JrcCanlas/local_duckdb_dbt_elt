@@ -150,5 +150,158 @@ def dbt_build(selector, db_path):
         )
 
 
+def run_pipeline(db_path, name, cfg, app):
+    """Execute a complete ETL pipeline from discovery through final export.
+
+    The flow is: discover source files, validate required columns or Excel inputs,
+    load records into the Bronze table, record file metadata, close the DuckDB
+    connection for dbt access, run the dbt selector, export mart tables, and
+    update the pipeline watermark and run log.
+
+    Args:
+        db_path: Filesystem path to the application DuckDB database.
+        name: Pipeline identifier used in metadata tables and logging.
+        cfg: Pipeline-specific settings loaded from config/pipelines.yml.
+        app: Global application configuration loaded from config/app.yml.
+
+    Raises:
+        Exception: Any ingestion, validation, dbt, or export failure is recorded in
+            metadata and re-raised to stop the run.
+    """
+    pipeline_started = time.perf_counter()
+    run = str(uuid.uuid4())
+    found = done = rows = 0
+    files = []
+    con = connect(db_path)
+    con.execute(
+        "INSERT INTO metadata.etl_run_log(run_id,pipeline_name,started_at,status) VALUES (?,?,current_timestamp,'RUNNING')",
+        [run, name],
+    )
+    logging.info("[%s] Pipeline started (run_id=%s)", name, run)
+    try:
+        # Discover files from the folder and pattern selected in pipelines.yml.
+        files = sorted((ROOT / cfg["source_folder"]).glob(cfg["source_pattern"]))
+        found = len(files)
+        logging.info("[%s] Discovery complete: %d file(s) found", name, found)
+        audit(con, run, name, "DISCOVERY", "SUCCESS", found, f"Found {found} file(s)")
+        append = cfg.get("append", True)
+        if not append:
+            logging.info(
+                "[%s] Replacement mode: clearing %s", name, cfg["bronze_table"]
+            )
+            clear_bronze(con, cfg["bronze_table"])
+        # Hashing lets repeated runs skip files that were already loaded.
+        for path in files:
+            if append and metadata_unchanged(con, name, path):
+                logging.info("[%s] Skipping loaded file: %s", name, path.name)
+                continue
+            digest = file_hash(path)
+            logging.info("[%s] Loading file: %s", name, path.name)
+            try:
+                if path.suffix.lower() == ".csv":
+                    columns = con.execute(
+                        "DESCRIBE SELECT * FROM read_csv(?, header=true, all_varchar=true)",
+                        [str(path)],
+                    ).fetchall()
+                    actual_columns = {column[0].strip() for column in columns}
+                    required = set(cfg.get("required_columns") or [])
+                    missing = sorted(required - actual_columns)
+                    if missing:
+                        raise ValueError(
+                            f"Missing required column(s) in {path.name}: {', '.join(missing)}"
+                        )
+                    n = append_source_file(con, cfg["bronze_table"], path, run)
+                else:
+                    df = read_file(path, cfg.get("excel"))
+                    validate_required_columns(df, cfg.get("required_columns"), path)
+                    staging_folder = ROOT / cfg.get("staging_folder", f"staging/{name}")
+                    parquet_path = staging_folder / f"{path.stem}.parquet"
+                    convert_excel_to_parquet(
+                        path, parquet_path, cfg.get("excel"), data=df
+                    )
+                    n = append_source_file(
+                        con,
+                        cfg["bronze_table"],
+                        parquet_path,
+                        run,
+                        source_path=path,
+                    )
+            except Exception as exc:
+                logging.error("[%s] Failed file %s: %s", name, path.name, exc)
+                raise
+            stat = path.stat()
+            done += 1
+            rows += n
+            con.execute(
+                "INSERT INTO metadata.file_history VALUES (?,?,?,?,?,current_timestamp,?,?,'SUCCESS',NULL) "
+                "ON CONFLICT (pipeline_name, source_file, file_hash) DO UPDATE SET "
+                "file_size_bytes=excluded.file_size_bytes, "
+                "file_modified_at=excluded.file_modified_at, "
+                "loaded_at=excluded.loaded_at, run_id=excluded.run_id, "
+                "row_count=excluded.row_count, status=excluded.status, "
+                "error_message=excluded.error_message",
+                [
+                    name,
+                    str(path.resolve()),
+                    digest,
+                    stat.st_size,
+                    datetime.fromtimestamp(stat.st_mtime),
+                    run,
+                    n,
+                ],
+            )
+            logging.info("[%s] Loaded %d row(s) from %s", name, n, path.name)
+        audit(con, run, name, "BRONZE", "SUCCESS", rows)
+        # dbt needs exclusive access to the DuckDB file while it builds models.
+        logging.info(
+            "[%s] Bronze load complete: %d file(s), %d row(s)", name, done, rows
+        )
+        con.close()  # release DuckDB before dbt opens the same file
+        logging.info("[%s] Starting dbt build: %s", name, cfg["dbt_selector"])
+        dbt_build(cfg["dbt_selector"], db_path)
+        con = connect(db_path)
+        audit(con, run, name, "DBT_BUILD", "SUCCESS")
+        logging.info("[%s] dbt build complete", name)
+        outputs = export_tables(con, cfg["mart_tables"], ROOT, app)
+        audit(con, run, name, "EXPORT", "SUCCESS", 0, ",".join(map(str, outputs)))
+        logging.info("[%s] Export complete: %s", name, ", ".join(map(str, outputs)))
+        wm = max(
+            (datetime.fromtimestamp(f.stat().st_mtime) for f in files),
+            default=datetime.now(),
+        )
+        con.execute(
+            "INSERT INTO metadata.watermark VALUES (?, ?, current_timestamp, ?) ON CONFLICT(pipeline_name) DO UPDATE SET watermark_value=excluded.watermark_value,updated_at=excluded.updated_at,run_id=excluded.run_id",
+            [name, wm, run],
+        )
+        con.execute(
+            "UPDATE metadata.etl_run_log SET ended_at=current_timestamp,status='SUCCESS',files_found=?,files_loaded=?,rows_loaded=? WHERE run_id=?",
+            [found, done, rows, run],
+        )
+        con.close()
+        pipeline_runtime = time.perf_counter() - pipeline_started
+        logging.info(
+            "[%s] Pipeline completed successfully in %s",
+            name,
+            format_runtime(pipeline_runtime),
+        )
+    except Exception as exc:
+        pipeline_runtime = time.perf_counter() - pipeline_started
+        try:
+            con.close()
+        except Exception:
+            pass
+        con = connect(db_path)
+        con.execute(
+            "UPDATE metadata.etl_run_log SET ended_at=current_timestamp,status='FAILED',files_found=?,files_loaded=?,rows_loaded=?,error_message=? WHERE run_id=?",
+            [found, done, rows, str(exc), run],
+        )
+        audit(con, run, name, "PIPELINE", "FAILED", rows, str(exc))
+        con.close()
+        logging.error(
+            "[%s] Pipeline failed after %s", name, format_runtime(pipeline_runtime)
+        )
+        raise
+
+
 if __name__ == "__main__":
     print("Test run")
