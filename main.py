@@ -303,5 +303,60 @@ def run_pipeline(db_path, name, cfg, app):
         raise
 
 
+def main():
+    """Run the ETL application for the selected pipeline or every enabled pipeline.
+
+    Command-line usage:
+        python main.py --pipeline customer
+
+    The function reads the application and pipeline configuration, ensures the
+    runtime folders exist, configures logging, then iterates through every enabled
+    pipeline. Each pipeline executes the ETL lifecycle and records the final exit
+    status for the process.
+
+    Returns:
+        None: The function exits the process with a shell status code rather than
+        returning a value.
+    """
+    p = argparse.ArgumentParser()
+    p.add_argument("--pipeline")
+    a = p.parse_args()
+    app = read_yaml(ROOT / "config/app.yml")
+    pipes = read_yaml(ROOT / "config/pipelines.yml")["pipelines"]
+    ensure_runtime_folders(pipes, app)
+    log = ROOT / app["logging"]["file"]
+    log_format = "%(asctime)s | %(levelname)s | %(message)s"
+    file_handler = logging.FileHandler(log)
+    file_handler.setFormatter(logging.Formatter(log_format))
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(ConsoleFormatter(log_format))
+    logging.basicConfig(
+        level=app["logging"]["level"],
+        handlers=[file_handler, console_handler],
+    )
+    overall_started = time.perf_counter()
+    chosen = {a.pipeline: pipes[a.pipeline]} if a.pipeline else pipes
+    db_path = ROOT / app["database"]
+    failed = []
+    for name, cfg in chosen.items():
+        if cfg.get("enabled", True):
+            try:
+                run_pipeline(db_path, name, cfg, app)
+            except Exception as exc:
+                logging.exception("[%s] Pipeline failed: %s", name, exc)
+                failed.append(name)
+    overall_runtime = time.perf_counter() - overall_started
+    logging.info("Overall ETL runtime: %s", format_runtime(overall_runtime))
+    if failed:
+        print("Failed: " + ", ".join(failed))
+        exit_code = 1
+    else:
+        print("ETL completed successfully.")
+        exit_code = 0
+    if os.environ.get("ETL_NON_INTERACTIVE") != "1":
+        input("Press Enter to close...")
+    raise SystemExit(exit_code)
+
+
 if __name__ == "__main__":
     print("Test run")
