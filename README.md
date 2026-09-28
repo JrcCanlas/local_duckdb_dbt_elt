@@ -17,6 +17,7 @@ and Power BI-friendly exports. The enabled ERP and workflow pipelines provide cu
 ## High-Level Architecture
 
 ![High Level Architecture](images/High%20Level%20Architecture.jpg)
+![Low Level Architecture](images/Low%20Level%20Architecture.jpg)
 
 ## Project Flow
 
@@ -24,7 +25,7 @@ and Power BI-friendly exports. The enabled ERP and workflow pipelines provide cu
 CSV/Excel Source Files
         |
         v
-Python ETL Orchestrator
+Python ELT Orchestrator
         |
         v
 DuckDB Bronze Layer
@@ -40,6 +41,59 @@ Parquet/CSV Exports
         |
         v
 Power BI
+```
+
+## Project Structure
+
+```text
+local_duckdb_dbt_elt/
+├── config/
+│   ├── app.yml
+│   └── pipelines.yml
+├── database/
+│   └── elt.duckdb
+├── dbt/
+│   ├── dbt_project.yml
+│   ├── profiles.yml
+│   ├── macros/
+│   ├── models/
+│   ├── logs/
+│   └── target/
+├── docs/
+│   ├── dbt.md
+│   ├── duckdb.md
+│   ├── lineage.md
+│   ├── operations.md
+│   ├── packaging.md
+│   ├── performance.md
+│   ├── project-conventions-and-analytics.md
+│   ├── setup.md
+│   ├── testing.md
+│   └── troubleshooting.md
+├── elt/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── export.py
+│   ├── ingest.py
+│   └── metadata.py
+├── exports/
+│   └── powerbi/
+├── images/
+├── logs/
+├── source/
+│   ├── customer/
+│   ├── erp/
+│   └── workflow/
+├── staging/
+├── tests/
+│   └── test_elt.py
+├── main.py
+├── README.md
+├── requirements.txt
+├── LICENSE
+├── run_customer.bat
+├── run_all.bat
+└── .gitignore
 ```
 
 ## Quick start
@@ -83,7 +137,7 @@ created automatically when missing.
 - [dbt development and commands](docs/dbt.md)
 - [DuckDB inspection](docs/duckdb.md)
 - [Data lineage](docs/lineage.md)
-- [Testing with test_etl.py](docs/testing.md)
+- [Testing with test_elt.py](docs/testing.md)
 - [Performance and load modes](docs/performance.md)
 - [Troubleshooting](docs/troubleshooting.md)
 - [Client packaging with PyInstaller](docs/packaging.md)
@@ -117,4 +171,4 @@ Operational metadata is stored in the `metadata` schema:
 
 Only one process should write to `database\elt.duckdb` at a time. Power BI
 should consume exported files rather than hold the DuckDB database open during
-ETL.
+ELT.
