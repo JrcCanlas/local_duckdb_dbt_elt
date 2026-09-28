@@ -44,7 +44,7 @@ def connect(db_path):
 def audit(con, run, pipeline, stage, status, rows=0, msg=None):
     """Record the result of one pipeline stage in the audit log."""
     con.execute(
-        "INSERT INTO metadata.audit_log VALUE (?,?,?,?,current_timestamp,?,?,?)",
+        "INSERT INTO metadata.audit_log VALUES (?,?,?,?,current_timestamp,?,?,?)",
         [str(uuid.uuid4()), run, pipeline, stage, status, rows, msg],
     )
 
@@ -58,7 +58,7 @@ def format_runtime(seconds):
 
 
 def ensure_runtime_folders(pipes, app):
-    """Create every directory expected by the ETL runtime configuration.
+    """Create every directory expected by the ELT runtime configuration.
 
     This establishes the source folders, any staging area required for Excel
     conversions, the export directory for Power BI artifacts, the database file
@@ -101,7 +101,7 @@ def dbt_build(selector, db_path):
         selector: dbt selector string used with ``--select`` to build the desired
             models or tags.
         db_path: Filesystem location of the DuckDB database passed through the
-            ETL_DATABASE_PATH environment variable to the dbt process.
+            ELT_DATABASE_PATH environment variable to the dbt process.
 
     Raises:
         RuntimeError: If the dbt command exits with a non-zero status code.
@@ -122,7 +122,7 @@ def dbt_build(selector, db_path):
         selector,
     ]
     environment = dict(os.environ)
-    environment["ETL_DATABASE_PATH"] = str(db_path)
+    environment["ELT_DATABASE_PATH"] = str(db_path)
     result = subprocess.run(
         cmd,
         cwd=ROOT,
@@ -151,7 +151,7 @@ def dbt_build(selector, db_path):
 
 
 def run_pipeline(db_path, name, cfg, app):
-    """Execute a complete ETL pipeline from discovery through final export.
+    """Execute a complete ELT pipeline from discovery through final export.
 
     The flow is: discover source files, validate required columns or Excel inputs,
     load records into the Bronze table, record file metadata, close the DuckDB
@@ -174,7 +174,7 @@ def run_pipeline(db_path, name, cfg, app):
     files = []
     con = connect(db_path)
     con.execute(
-        "INSERT INTO metadata.etl_run_log(run_id,pipeline_name,started_at,status) VALUES (?,?,current_timestamp,'RUNNING')",
+        "INSERT INTO metadata.elt_run_log(run_id,pipeline_name,started_at,status) VALUES (?,?,current_timestamp,'RUNNING')",
         [run, name],
     )
     logging.info("[%s] Pipeline started (run_id=%s)", name, run)
@@ -274,7 +274,7 @@ def run_pipeline(db_path, name, cfg, app):
             [name, wm, run],
         )
         con.execute(
-            "UPDATE metadata.etl_run_log SET ended_at=current_timestamp,status='SUCCESS',files_found=?,files_loaded=?,rows_loaded=? WHERE run_id=?",
+            "UPDATE metadata.elt_run_log SET ended_at=current_timestamp,status='SUCCESS',files_found=?,files_loaded=?,rows_loaded=? WHERE run_id=?",
             [found, done, rows, run],
         )
         con.close()
@@ -292,7 +292,7 @@ def run_pipeline(db_path, name, cfg, app):
             pass
         con = connect(db_path)
         con.execute(
-            "UPDATE metadata.etl_run_log SET ended_at=current_timestamp,status='FAILED',files_found=?,files_loaded=?,rows_loaded=?,error_message=? WHERE run_id=?",
+            "UPDATE metadata.elt_run_log SET ended_at=current_timestamp,status='FAILED',files_found=?,files_loaded=?,rows_loaded=?,error_message=? WHERE run_id=?",
             [found, done, rows, str(exc), run],
         )
         audit(con, run, name, "PIPELINE", "FAILED", rows, str(exc))
@@ -304,14 +304,14 @@ def run_pipeline(db_path, name, cfg, app):
 
 
 def main():
-    """Run the ETL application for the selected pipeline or every enabled pipeline.
+    """Run the ELT application for the selected pipeline or every enabled pipeline.
 
     Command-line usage:
         python main.py --pipeline customer
 
     The function reads the application and pipeline configuration, ensures the
     runtime folders exist, configures logging, then iterates through every enabled
-    pipeline. Each pipeline executes the ETL lifecycle and records the final exit
+    pipeline. Each pipeline executes the ELT lifecycle and records the final exit
     status for the process.
 
     Returns:
@@ -346,12 +346,12 @@ def main():
                 logging.exception("[%s] Pipeline failed: %s", name, exc)
                 failed.append(name)
     overall_runtime = time.perf_counter() - overall_started
-    logging.info("Overall ETL runtime: %s", format_runtime(overall_runtime))
+    logging.info("Overall ELT runtime: %s", format_runtime(overall_runtime))
     if failed:
         print("Failed: " + ", ".join(failed))
         exit_code = 1
     else:
-        print("ETL completed successfully.")
+        print("ELT completed successfully.")
         exit_code = 0
     if os.environ.get("ETL_NON_INTERACTIVE") != "1":
         input("Press Enter to close...")
@@ -359,4 +359,4 @@ def main():
 
 
 if __name__ == "__main__":
-    print("Test run")
+    main()
