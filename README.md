@@ -17,6 +17,9 @@ and Power BI-friendly exports. The enabled ERP and workflow pipelines provide cu
 ## High-Level Architecture
 
 ![High Level Architecture](images/High%20Level%20Architecture.jpg)
+
+## Low-Level Architecture
+
 ![Low Level Architecture](images/Low%20Level%20Architecture.jpg)
 
 ## Project Flow
