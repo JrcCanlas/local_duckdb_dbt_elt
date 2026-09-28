@@ -1,7 +1,6 @@
 -- ERP staging: clean invoice fields, safely cast dates and amounts, and retain lineage.
 {{
   config(
-    materialized = 'table',
     alias='workflow',
     tags=['workflow']
     )
