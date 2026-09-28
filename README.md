@@ -41,3 +41,80 @@ Parquet/CSV Exports
         v
 Power BI
 ```
+
+## Quick start
+
+Extract the project to a writable local folder, then run:
+
+```cmd
+run_customer.bat
+```
+
+The launcher creates `.venv`, installs dependencies, loads the customer source,
+runs dbt, and writes the result to:
+
+```text
+exports\powerbi\mart_customer.parquet
+```
+
+Run all enabled pipelines with:
+
+```cmd
+run_all.bat
+```
+
+## Common commands
+
+```cmd
+.venv\Scripts\python.exe main.py --pipeline customer
+.venv\Scripts\python.exe main.py
+.venv\Scripts\python.exe -m unittest discover -s tests -v
+.venv\Scripts\dbt.exe debug --project-dir dbt --profiles-dir dbt
+```
+
+Logs are written to `logs\elt.log`. Pipeline durations are logged as
+`HH:MM:SS`. Configured source, staging, database, export, and log folders are
+created automatically when missing.
+
+## Documentation
+
+- [Project conventions and analytics guide](docs/project-conventions-and-analytics.md)
+- [Developer setup with uv or pip](docs/setup.md)
+- [dbt development and commands](docs/dbt.md)
+- [DuckDB inspection](docs/duckdb.md)
+- [Data lineage](docs/lineage.md)
+- [Testing with test_etl.py](docs/testing.md)
+- [Performance and load modes](docs/performance.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Client packaging with PyInstaller](docs/packaging.md)
+- [Windows Task Scheduler and operations](docs/operations.md)
+
+## Configuration
+
+- `config\app.yml`: database, logging, and CSV/Parquet export settings.
+- `config\pipelines.yml`: enabled pipelines, source patterns, load mode,
+  Bronze tables, dbt selectors, and mart exports.
+- `dbt\profiles.yml`: local DuckDB connection profile.
+
+Set `exports.csv: false` when only Parquet is required. Use `append: true` for
+new incremental batches and `append: false` for complete source snapshots.
+
+## Output and metadata
+
+Outputs are written to `exports\powerbi\`. The default customer outputs are:
+
+```text
+exports\powerbi\mart_customer.parquet
+exports\powerbi\mart_customer.csv
+```
+
+Operational metadata is stored in the `metadata` schema:
+
+- `metadata.elt_run_log`
+- `metadata.file_history`
+- `metadata.audit_log`
+- `metadata.watermark`
+
+Only one process should write to `database\elt.duckdb` at a time. Power BI
+should consume exported files rather than hold the DuckDB database open during
+ETL.
