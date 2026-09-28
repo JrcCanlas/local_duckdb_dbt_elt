@@ -1,7 +1,6 @@
 -- Silver staging: cast types, trim text, reject invalid IDs, and keep the latest row.
 {{ 
   config(
-    materialized = 'table',
     alias = 'customer',
     tags = ['customer']
     )
