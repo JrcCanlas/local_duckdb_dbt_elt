@@ -5,7 +5,7 @@ WITH ranked_events AS (
     SELECT
         event.*,
         row_number() OVER (
-            PARTITION BYevent.invoice_key
+            PARTITION BY event.invoice_key
             ORDER BY event.event_timestamp DESC, event.event_sequence DESC
         ) AS event_rank
     FROM {{ ref('fact_workflow_event') }} AS event
