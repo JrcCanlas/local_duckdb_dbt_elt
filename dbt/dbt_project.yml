@@ -8,11 +8,11 @@ model-paths: ["models"]
 test-paths: ["tests"]
 clean-targets: ["target", "dbt-packages"]
 models:
-  local_etl:
+  local_elt:
     # Silver cleans Bronze data; Mart contains reporting-ready tables.
     silver:
       +schema: silver
-      +materialized: tables
+      +materialized: table
     mart:
       +schema: mart
-      +materialized: tables
+      +materialized: table
