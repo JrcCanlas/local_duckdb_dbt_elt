@@ -7,3 +7,11 @@ dbt/logs/
 dbt/dbt_packages/
 exports/powerbi/*
 !exports/powerbi/.gitkeep
+source/erp/*.csv
+source/erp/*.xlsx
+source/workflow/*.csv
+source/workflow/*.xlsx
+source/customer/*.csv
+source/customer/*.xlsx
+source/sales/*.csv
+source/sales/*.xlsx
