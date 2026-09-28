@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS metadata.elt_run_log (
  status VARCHAR,
  files_found BIGINT DEFAULT 0,
  files_loaded BIGINT DEFAULT 0,
- rows_loaede BIGINT DEFAULT 0,
+ rows_loaded BIGINT DEFAULT 0,
  error_message VARCHAR
 );
 
@@ -29,6 +29,17 @@ CREATE TABLE IF NOT EXISTS metadata.file_history (
  status VARCHAR,
  error_message VARCHAR,
  PRIMARY KEY(pipeline_name, source_file, file_hash)
+);
+
+CREATE TABLE IF NOT EXISTS metadata.audit_log (
+ audit_id VARCHAR PRIMARY KEY,
+ run_id VARCHAR,
+ pipeline_name VARCHAR,
+ stage VARCHAR,
+ event_time TIMESTAMP,
+ status VARCHAR,
+ row_count BIGINT,
+ message VARCHAR
 );
 
 CREATE TABLE IF NOT EXISTS metadata.watermark (
