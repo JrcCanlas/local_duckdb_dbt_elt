@@ -25,12 +25,16 @@ ROOT = (
 
 
 class ConsoleFormatter(logging.Formatter):
-    """Color error message in a interactive console without coloring files."""
+    """Color success and error messages in an interactive console."""
 
     def format(self, record):
         message = super().format(record)
-        if record.levelno >= logging.ERROR and sys.stderr.isatty():
+        if not sys.stderr.isatty():
+            return message
+        if record.levelno >= logging.ERROR:
             return f"\033[31m{message}\033[0m"
+        if "completed successfully" in message or "Overall ELT runtime:" in message:
+            return f"\033[32m{message}\033[0m"
         return message
 
 
