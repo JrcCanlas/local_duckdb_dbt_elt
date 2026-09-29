@@ -15,3 +15,4 @@ source/customer/*.csv
 source/customer/*.xlsx
 source/sales/*.csv
 source/sales/*.xlsx
+dbt/.user.yml
