@@ -99,40 +99,6 @@ local_duckdb_dbt_elt/
 └── .gitignore
 ```
 
-## Quick start
-
-Extract the project to a writable local folder, then run:
-
-```cmd
-run_customer.bat
-```
-
-The launcher creates `.venv`, installs dependencies, loads the customer source,
-runs dbt, and writes the result to:
-
-```text
-exports\powerbi\mart_customer.parquet
-```
-
-Run all enabled pipelines with:
-
-```cmd
-run_all.bat
-```
-
-## Common commands
-
-```cmd
-.venv\Scripts\python.exe main.py --pipeline customer
-.venv\Scripts\python.exe main.py
-.venv\Scripts\python.exe -m unittest discover -s tests -v
-.venv\Scripts\dbt.exe debug --project-dir dbt --profiles-dir dbt
-```
-
-Logs are written to `logs\elt.log`. Pipeline durations are logged as
-`HH:MM:SS`. Configured source, staging, database, export, and log folders are
-created automatically when missing.
-
 ## Documentation
 
 - [Project conventions and analytics guide](docs/project-conventions-and-analytics.md)
@@ -155,6 +121,19 @@ created automatically when missing.
 
 Set `exports.csv: false` when only Parquet is required. Use `append: true` for
 new incremental batches and `append: false` for complete source snapshots.
+
+## Common commands
+
+```cmd
+.venv\Scripts\python.exe main.py --pipeline customer
+.venv\Scripts\python.exe main.py
+.venv\Scripts\python.exe -m unittest discover -s tests -v
+.venv\Scripts\dbt.exe debug --project-dir dbt --profiles-dir dbt
+```
+
+Logs are written to `logs\elt.log`. Pipeline durations are logged as
+`HH:MM:SS`. Configured source, staging, database, export, and log folders are
+created automatically when missing.
 
 ## Output and metadata
 
