@@ -16,3 +16,5 @@ source/customer/*.xlsx
 source/sales/*.csv
 source/sales/*.xlsx
 dbt/.user.yml
+build/
+dist/
