@@ -4,7 +4,7 @@ pipelines:
     # This example is ready for configuration but disabled until sales model exist.
     enabled: false
     source_folder: source/sales
-    source_patter: "*.xlsx"
+    source_pattern: "*.xlsx"
     bronze_table: bronze.sales
     dbt_selector: tag:sales
     mart_tables:
