@@ -28,7 +28,7 @@ from elt.ingest import (
 from elt.metadata import initialize
 
 
-class EtlHelperTests(unittest.TestCase):
+class EltHelperTests(unittest.TestCase):
     """Check the small building blocks used by the ETL pipeline."""
 
     def setUp(self):
