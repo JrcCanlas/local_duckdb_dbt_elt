@@ -1,10 +1,10 @@
-# Testing the ETL Project
+# Testing the ELT Project
 
-This guide covers running and understanding the unit tests in `tests/test_etl.py`.
+This guide covers running and understanding the unit tests in `tests/test_elt.py`.
 
 ## Overview
 
-The test suite validates the Python ETL helpers and core utilities. All tests use **temporary files and an in-memory DuckDB database**, so they do not modify the production database (`database/etl.duckdb`) or exported files.
+The test suite validates the Python ELT helpers and core utilities. All tests use **temporary files and an in-memory DuckDB database**, so they do not modify the production database (`database/elt.duckdb`) or exported files.
 
 ## Running Tests
 
@@ -23,13 +23,13 @@ Run tests with higher verbosity:
 Run a specific test class:
 
 ```cmd
-.venv\Scripts\python.exe -m unittest tests.test_etl.EtlHelperTests -v
+.venv\Scripts\python.exe -m unittest tests.test_elt.EltHelperTests -v
 ```
 
 Run a specific test method:
 
 ```cmd
-.venv\Scripts\python.exe -m unittest tests.test_etl.EtlHelperTests.test_file_hash_matches_sha256 -v
+.venv\Scripts\python.exe -m unittest tests.test_elt.EltHelperTests.test_file_hash_matches_sha256 -v
 ```
 
 ## Test Coverage
@@ -69,7 +69,7 @@ Run a specific test method:
 - Validates that lineage columns are added during ingestion:
   - `_source_file`: Full path to the source file
   - `_loaded_at`: Timestamp of the load
-  - `_run_id`: Unique identifier for the ETL run
+  - `_run_id`: Unique identifier for the ELT run
 - Tests duplicate detection by checking the `metadata.file_history` table.
 - Confirms that a file loaded once cannot be loaded twice using `loaded()` function.
 
@@ -151,7 +151,7 @@ if errorlevel 1 (
 
 ## Validation Checklist
 
-After modifying Python ETL code (`etl/*.py`):
+After modifying Python ELT code (`elt/*.py`):
 
 ```cmd
 .venv\Scripts\python.exe -m unittest discover -s tests -v
@@ -177,7 +177,7 @@ These dbt commands have their own test suite defined in `dbt/models/schema.yml`.
 
 To add a new test:
 
-1. Add a method to `EtlHelperTests` class in `tests/test_etl.py`.
+1. Add a method to `EltHelperTests` class in `tests/test_elt.py`.
 2. Start the method name with `test_`.
 3. Use `tempfile.TemporaryDirectory()` for file I/O.
 4. Use `self.connection` (in-memory database) for data operations.

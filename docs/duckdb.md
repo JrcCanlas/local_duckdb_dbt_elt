@@ -1,15 +1,15 @@
 # DuckDB
 
-The application database is `database\etl.duckdb`. Close the DuckDB prompt before running Python or dbt.
+The application database is `database\elt.duckdb`. Close the DuckDB prompt before running Python or dbt.
 
 ```cmd
-duckdb database\etl.duckdb
+duckdb database\elt.duckdb
 ```
 
 To open the database in DuckDB's browser UI, run this from the repository root:
 
 ```cmd
-duckdb -ui database\etl.duckdb
+duckdb -ui database\elt.duckdb
 ```
 
 You can also run `open_duckdb.bat` to open the database in the DuckDB CLI. The DuckDB CLI must be installed and available on `PATH`. Close the DuckDB UI or prompt before running Python or dbt.
@@ -28,4 +28,4 @@ FROM metadata.file_history
 ORDER BY loaded_at DESC;
 ```
 
-The metadata schema contains `etl_run_log`, `file_history`, `audit_log`, and `watermark`. Bronze rows retain `_source_file`, `_loaded_at`, and `_run_id` lineage columns.
+The metadata schema contains `elt_run_log`, `file_history`, `audit_log`, and `watermark`. Bronze rows retain `_source_file`, `_loaded_at`, and `_run_id` lineage columns.

@@ -32,13 +32,13 @@ It supports the team by providing:
 - Run, file, and audit metadata for troubleshooting and refresh traceability.
 - A local workflow suitable for Windows laptops, AVD, Citrix, and scheduled jobs.
 
-The analytics team can use the exported marts in Power BI while the ETL process
+The analytics team can use the exported marts in Power BI while the ELT process
 uses the DuckDB file. Power BI should not keep the DuckDB database open during an
-ETL run.
+ELT run.
 
 ## Active data products
 
-The active dbt project is `dbt/`. The `local_etl/` directory is only a separate
+The active dbt project is `dbt/`. The `local_elt/` directory is only a separate
 dbt starter example and is not used by `main.py`.
 
 The enabled operational pipelines are defined in `config/pipelines.yml`:
@@ -64,11 +64,11 @@ These grains are important: dashboard relationships and measures should not trea
 ### Repository paths
 
 - `main.py` is the command-line entry point and pipeline orchestrator.
-- `etl/` contains configuration, ingestion, metadata, and export helpers.
+- `elt/` contains configuration, ingestion, metadata, and export helpers.
 - `config/app.yml` contains database, logging, and export settings.
 - `config/pipelines.yml` defines source folders, load modes, selectors, and marts.
 - `dbt/` is the active dbt Core project.
-- `database/etl.duckdb` is the local application database.
+- `database/elt.duckdb` is the local application database.
 - `source/` contains input CSV and Excel files.
 - `exports/powerbi/` contains generated reporting files.
 - `tests/` contains Python unit tests.
@@ -104,12 +104,12 @@ Bronze rows retain `_source_file`, `_loaded_at`, and `_run_id`. Operational
 metadata belongs in the `metadata` schema:
 
 - `metadata.file_history` tracks source file hashes, row counts, status, and runs.
-- `metadata.etl_run_log` records pipeline-level success or failure.
+- `metadata.elt_run_log` records pipeline-level success or failure.
 - `metadata.audit_log` records discovery, Bronze, dbt, and export stages.
 - `metadata.watermark` stores incremental processing state where configured.
 
 File SHA-256 hashes prevent a successfully loaded file version from being loaded
-twice. Only one process should write to `database/etl.duckdb` at a time.
+twice. Only one process should write to `database/elt.duckdb` at a time.
 
 ## Reporting practices
 
@@ -123,10 +123,10 @@ For dashboard development:
    number that does not match an operational report.
 4. Treat null dates and amounts as meaningful data-quality states; do not silently
    convert them to zero in a dashboard.
-5. Validate refresh results against the ETL and dbt logs before publishing a
+5. Validate refresh results against the ELT and dbt logs before publishing a
    changed report.
 6. Use exported Parquet or CSV files for Power BI consumption, especially when an
-   ETL run may write to DuckDB.
+   ELT run may write to DuckDB.
 
 Current date-based calculations, such as overdue days and open payment timing,
 are evaluated when the mart is built. A refresh is therefore required for those

@@ -1,6 +1,6 @@
 # dbt
 
-The active dbt Core project is `dbt/`. It uses the local `local_etl` profile and `dbt-duckdb`; dbt Cloud is not required.
+The active dbt Core project is `dbt/`. It uses the local `local_elt` profile and `dbt-duckdb`; dbt Cloud is not required.
 
 ```cmd
 .venv\Scripts\dbt.exe debug --project-dir dbt --profiles-dir dbt
@@ -21,16 +21,16 @@ Other commands:
 
 Generate and open the dbt documentation site from the repository root:
 
-The profile defaults to `database\etl.duckdb` when commands are run from the repository root. Set the database path explicitly only when using a different database. In Command Prompt:
+The profile defaults to `database\elt.duckdb` when commands are run from the repository root. Set the database path explicitly only when using a different database. In Command Prompt:
 
 ```cmd
-set ETL_DATABASE_PATH=database\etl.duckdb
+set ELT_DATABASE_PATH=database\elt.duckdb
 ```
 
 In PowerShell:
 
 ```powershell
-$env:ETL_DATABASE_PATH = "database\etl.duckdb"
+$env:ELT_DATABASE_PATH = "database\elt.duckdb"
 ```
 
 Then generate and serve the documentation:

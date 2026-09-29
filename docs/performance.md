@@ -13,7 +13,7 @@ For large files, prefer:
 CSV/Excel -> Parquet -> DuckDB -> dbt -> Parquet export
 ```
 
-A 50-70 MB Excel workbook with about 500,000 rows can use substantially more memory while `openpyxl` and Pandas parse it. On a 16 GB laptop, process one file at a time, keep 20-30 GB of free disk space, and avoid running Power BI against DuckDB during the ETL.
+A 50-70 MB Excel workbook with about 500,000 rows can use substantially more memory while `openpyxl` and Pandas parse it. On a 16 GB laptop, process one file at a time, keep 20-30 GB of free disk space, and avoid running Power BI against DuckDB during the ELT.
 
 Use `append: true` only when files contain new batches. Keep `append: false` for complete snapshots. If corrected records can arrive in incremental files, deduplicate them in the Silver model using a stable business key.
 
