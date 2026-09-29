@@ -1,5 +1,5 @@
 # Path are relative to the repository root, where main.py is run.
-database: database/etl.duckdb
+database: database/elt.duckdb
 logging:
   # INFO writes progress to both console and logs/etl.log.
   level: INFO
