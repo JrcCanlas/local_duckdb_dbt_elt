@@ -5,6 +5,6 @@ local_elt:
     dev:
       type: duckdb
       # main.py supplies this path for both source and packaged deployments.
-      path: "{{ env_var('ETL_DATABASE_PATH', 'database/etl.duckdb') }}"
+      path: "{{ env_var('ELT_DATABASE_PATH', 'database/elt.duckdb') }}"
       #path: C:\Users\john.roland.c.canlas\Documents\local_duckdb_dbt_etl\database\etl.duckdb # for test purposes
       threads: 2
