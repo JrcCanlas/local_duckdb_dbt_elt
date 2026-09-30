@@ -52,5 +52,12 @@ CREATE TABLE IF NOT EXISTS metadata.watermark (
 
 
 def initialize(con):
-    """Create application schemas and metadata tables if they do not exists."""
+    """Create the Bronze, Silver, Mart, and metadata schemas and tables.
+
+    Args:
+        con: Active DuckDB connection on which the DDL statements are executed.
+
+    Returns:
+        None: The function initializes the schema and tables in-place.
+    """
     con.execute(DDL)
