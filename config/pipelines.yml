@@ -21,6 +21,9 @@ pipelines:
     # sheet_name: "ERP_RAW"
     # header: 0
     required_columns:
+      - "INVOICE DATE"
+      - "CREATION DATE"
+      - "SUPPLIER ID"
     # The selector chooses the dbt models
     dbt_selector: tag:erp
     mart_tables:
@@ -34,6 +37,8 @@ pipelines:
     source_pattern: "*.csv"
     bronze_table: bronze.workflow
     required_columns:
+      - "WORKFLOW_ID"
+      - "SUPPLIER_ID"
     dbt_selector: +tag:workflow
     mart_tables:
       - mart.workflow
