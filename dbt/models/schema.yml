@@ -11,3 +11,184 @@ models:
     columns:
       - name: customer_id
         data_tests: [not_null, unique]
+  - name: erp
+    description: Power BI invoice mart with amounts and payment metrics.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: invoice_key
+        data_type: varchar
+        description: Stable key for a supplier and invoice number.
+        data_tests: [not_null, unique]
+      - name: supplier_id
+        data_type: varchar
+        description: Identifier of the invoice supplier.
+        data_tests: [not_null]
+      - name: invoice_id
+        data_type: varchar
+        description: Source-system invoice identifier.
+      - name: invoice_number
+        data_type: varchar
+        description: Supplier invoice number.
+        data_tests: [not_null]
+      - name: invoice_date
+        data_type: date
+        description: Date the invoice was issued.
+      - name: creation_date
+        data_type: date
+        description: Date the invoice record was created.
+      - name: receipt_date
+        data_type: date
+        description: Date the invoice was received.
+      - name: posting_date
+        data_type: date
+        description: Date the invoice was posted.
+      - name: payment_date
+        data_type: date
+        description: Date the invoice was paid.
+      - name: due_date_raw
+        data_type: date
+        description: Invoice due date from the source.
+      - name: payment_status
+        data_type: varchar
+        description: Source payment status.
+      - name: currency
+        data_type: varchar
+        description: Invoice currency code.
+      - name: line_amount_doc
+        data_type: decimal(38,2)
+        description: Sum of invoice line amounts in document currency.
+      - name: line_amount_usd
+        data_type: decimal(38,2)
+        description: Sum of invoice line amounts in US dollars.
+      - name: invoice_amount_doc
+        data_type: decimal(18,2)
+        description: Invoice total in document currency.
+      - name: amount_paid
+        data_type: decimal(18,2)
+        description: Amount paid in document currency.
+      - name: source_row_count
+        data_type: bigint
+        description: Number of source invoice lines for this invoice.
+      - name: _loaded_at
+        data_type: timestamp
+        description: Timestamp when the source data was loaded.
+      - name: _run_id
+        data_type: varchar
+        description: ELT run identifier associated with the source data.
+      - name: line_amount_variance_doc
+        data_type: decimal(38,2)
+        description: Difference between invoice total and summed line amounts.
+      - name: outstanding_amount_doc
+        data_type: decimal(18,2)
+        description: Invoice amount remaining after payments.
+      - name: paid_percent
+        data_type: double
+        description: Percentage of the invoice amount paid.
+      - name: days_to_pay
+        data_type: bigint
+        description: Days between invoice date and payment date.
+      - name: days_to_post
+        data_type: bigint
+        description: Days between invoice date and posting date.
+      - name: overdue_days
+        data_type: bigint
+        description: Number of days the invoice is overdue.
+      - name: payment_timing
+        data_type: varchar
+        description: Payment timing classification.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [UNKNOWN, OVERDUE, OPEN, ON_TIME, LATE]
+      - name: is_paid
+        data_type: boolean
+        description: Whether a payment date is recorded.
+  - name: workflow
+    description: Power BI invoice mart with summarized workflow activity.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: invoice_key
+        data_type: varchar
+        description: Stable key for a supplier and invoice number.
+        data_tests: [not_null, unique]
+      - name: supplier_id
+        data_type: varchar
+        description: Identifier of the invoice supplier.
+        data_tests: [not_null]
+      - name: invoice_id
+        data_type: varchar
+        description: Source-system invoice identifier.
+      - name: invoice_number
+        data_type: varchar
+        description: Supplier invoice number.
+        data_tests: [not_null]
+      - name: invoice_date
+        data_type: date
+        description: Date the invoice was issued.
+      - name: creation_date
+        data_type: date
+        description: Date the invoice record was created.
+      - name: receipt_date
+        data_type: date
+        description: Date the invoice was received.
+      - name: posting_date
+        data_type: date
+        description: Date the invoice was posted.
+      - name: payment_date
+        data_type: date
+        description: Date the invoice was paid.
+      - name: due_date_raw
+        data_type: date
+        description: Invoice due date from the source.
+      - name: current_workflow_id
+        data_type: varchar
+        description: Identifier of the latest workflow for the invoice.
+      - name: current_workflow_stage
+        data_type: varchar
+        description: Latest workflow stage for the invoice.
+      - name: current_workflow_status
+        data_type: varchar
+        description: Latest workflow status for the invoice.
+      - name: invoice_amount_usd
+        data_type: decimal(18,2)
+        description: Invoice total in US dollars.
+      - name: first_workflow_event_timestamp
+        data_type: timestamp
+        description: Timestamp of the first workflow event.
+      - name: last_workflow_event_timestamp
+        data_type: timestamp
+        description: Timestamp of the latest workflow event.
+      - name: workflow_event_count
+        data_type: bigint
+        description: Number of workflow events for the invoice.
+      - name: workflow_stage_count
+        data_type: bigint
+        description: Number of distinct workflow stages for the invoice.
+      - name: exception_event_count
+        data_type: hugeint
+        description: Number of workflow events with an exception reason.
+      - name: exception_rate_percent
+        data_type: double
+        description: Percentage of workflow events with an exception.
+      - name: workflow_duration_hours
+        data_type: double
+        description: Elapsed hours between the first and latest workflow event.
+      - name: average_event_gap_hours
+        data_type: double
+        description: Average elapsed hours between consecutive workflow events.
+      - name: has_exception
+        data_type: boolean
+        description: Whether any workflow event has an exception reason.
+      - name: is_workflow_complete
+        data_type: boolean
+        description: Whether the latest workflow status is complete.
+      - name: _loaded_at
+        data_type: timestamp
+        description: Timestamp when the source data was loaded.
+      - name: _run_id
+        data_type: varchar
+        description: ELT run identifier associated with the source data.
